@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大阪路線マスター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #12151c;
+  --surface2: #1a1e28;
+  --border: #252a38;
+  --text: #e8eaf0;
+  --text-sub: #7a8299;
+  --text-dim: #4a5168;
+  --accent: #4f8ef7;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+#app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+.header-icon { font-size: 22px; }
+.header-title { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: 17px; letter-spacing: 0.04em; }
+.header-sub { font-size: 10px; color: var(--text-sub); letter-spacing: 0.06em; margin-top: 1px; }
+.header-back { margin-left: auto; background: var(--surface2); border: 1px solid var(--border); color: var(--text-sub); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.header-back:hover { color: var(--text); border-color: var(--accent); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.fade { animation: fadeIn 0.22s ease; }
+
+/* HOME */
+.home-hero { background: linear-gradient(135deg, #0f1420 0%, #1a1e2e 50%, #0f1420 100%); padding: 32px 20px 24px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+.home-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 30%, rgba(79,142,247,0.07) 0%, transparent 60%); }
+.hero-label { font-size: 10px; letter-spacing: 0.15em; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px; }
+.hero-stat { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 52px; font-weight: 900; line-height: 1; color: var(--accent); }
+.hero-stat span { font-size: 22px; color: var(--text-sub); font-weight: 400; }
+.hero-desc { font-size: 12px; color: var(--text-sub); margin-top: 6px; }
+.progress-ring-wrap { position: absolute; right: 20px; top: 24px; }
+.progress-ring-wrap svg { transform: rotate(-90deg); }
+.progress-ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+.progress-ring-fg { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
+.section { padding: 20px; }
+.section-title { font-size: 11px; letter-spacing: 0.12em; color: var(--text-sub); text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; text-align: center; }
+.stat-card .val { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 24px; font-weight: 900; }
+.stat-card .lbl { font-size: 10px; color: var(--text-sub); margin-top: 3px; }
+.line-progress-list { display: flex; flex-direction: column; gap: 8px; }
+.line-prog-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+.line-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.line-prog-name { font-size: 13px; font-weight: 500; flex: 1; }
+.line-prog-bar-wrap { width: 80px; }
+.line-prog-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.line-prog-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+.line-prog-pct { font-size: 11px; color: var(--text-sub); text-align: right; margin-top: 3px; }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 14px; cursor: pointer; transition: all 0.18s; text-align: left; }
+.menu-btn:hover { border-color: var(--accent); background: var(--surface2); transform: translateY(-1px); }
+.menu-btn-icon { font-size: 24px; margin-bottom: 8px; }
+.menu-btn-title { font-size: 14px; font-weight: 700; }
+.menu-btn-sub { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+.accent-btn { border-color: rgba(79,142,247,0.4) !important; background: rgba(79,142,247,0.08) !important; }
+.accent-btn:hover { border-color: var(--accent) !important; background: rgba(79,142,247,0.15) !important; }
+
+/* LINE LIST */
+.tab-scroll { display: flex; gap: 6px; padding: 14px 16px; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+.tab-scroll::-webkit-scrollbar { display: none; }
+.tab-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-sub); transition: all 0.15s; white-space: nowrap; }
+.station-list { padding: 12px 16px; }
+.station-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.station-row:last-child { border-bottom: none; }
+.stn-num { font-size: 10px; color: var(--text-dim); width: 28px; flex-shrink: 0; text-align: right; font-weight: 500; }
+.stn-bar { width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0; min-height: 40px; }
+.stn-info { flex: 1; }
+.stn-name { font-size: 15px; font-weight: 500; }
+.stn-kana { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+.transfer-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.transfer-badge { font-size: 9px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.3); color: #4f8ef7; }
+.level-badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; flex-shrink: 0; }
+.lv0 { background: rgba(100,100,100,0.2); color: var(--text-dim); }
+.lv1 { background: rgba(251,191,36,0.15); color: var(--yellow); }
+.lv2 { background: rgba(79,142,247,0.15); color: var(--accent); }
+.lv3 { background: rgba(167,139,250,0.15); color: var(--purple); }
+.lv4 { background: rgba(52,211,153,0.15); color: var(--green); }
+
+/* QUIZ SELECT */
+.quiz-select-list { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.quiz-type-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 14px; }
+.quiz-type-card:hover { border-color: var(--accent); background: var(--surface2); }
+.qt-icon { font-size: 26px; }
+.qt-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.qt-desc { font-size: 12px; color: var(--text-sub); }
+.qt-badge { margin-left: auto; font-size: 10px; background: var(--surface2); border: 1px solid var(--border); padding: 3px 9px; border-radius: 10px; color: var(--text-sub); flex-shrink: 0; }
+.badge-new { border-color: rgba(52,211,153,0.4) !important; color: var(--green) !important; background: rgba(52,211,153,0.08) !important; }
+.badge-adv { border-color: rgba(167,139,250,0.4) !important; color: var(--purple) !important; background: rgba(167,139,250,0.08) !important; }
+
+/* QUIZ */
+.quiz-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+.quiz-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.quiz-type-label { font-size: 11px; letter-spacing: 0.1em; color: var(--text-sub); text-transform: uppercase; }
+.quiz-score .cor { color: var(--green); }
+.quiz-score .inc { color: var(--red); }
+.qpbar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.qpfill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
+.quiz-body { padding: 20px; }
+.q-label { font-size: 11px; letter-spacing: 0.1em; color: var(--text-sub); text-transform: uppercase; margin-bottom: 14px; }
+.q-text { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.5; margin-bottom: 6px; }
+.q-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 20px; }
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; text-align: left; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 10px; font-family: 'Noto Sans JP', sans-serif; width: 100%; }
+.choice-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface2); }
+.choice-btn.sel { border-color: var(--accent); background: rgba(79,142,247,0.1); }
+.choice-btn.ok { border-color: var(--green); background: rgba(52,211,153,0.1); color: var(--green); }
+.choice-btn.ng { border-color: var(--red); background: rgba(248,113,113,0.1); color: var(--red); }
+.choice-btn:disabled { cursor: default; }
+.cmark { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.choice-btn.sel .cmark { border-color: var(--accent); background: var(--accent); color: white; }
+.choice-btn.ok .cmark { border-color: var(--green); background: var(--green); color: white; }
+.choice-btn.ng .cmark { border-color: var(--red); background: var(--red); color: white; }
+.explain { margin-top: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: var(--text-sub); }
+.explain .eicon { font-size: 22px; margin-bottom: 8px; }
+.q-actions { margin-top: 18px; display: flex; gap: 10px; }
+.btn-p { flex: 1; background: var(--accent); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.15s; font-family: 'Noto Sans JP', sans-serif; }
+.btn-p:hover { background: #3d7de0; transform: translateY(-1px); }
+.btn-s { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; font-size: 14px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; }
+.btn-s:hover { color: var(--text); }
+
+/* SORT */
+.sort-area { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.sort-item { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: grab; font-size: 14px; font-weight: 500; user-select: none; transition: all 0.12s; }
+.sort-item.dragging { opacity: 0.4; border-color: var(--accent); }
+.sort-item.over { border-color: var(--accent); background: rgba(79,142,247,0.1); transform: scale(1.01); }
+.dhandle { color: var(--text-dim); font-size: 16px; }
+.snum { font-size: 11px; color: var(--text-sub); width: 18px; text-align: center; }
+
+/* OX */
+.ox-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.ox-btn { border-radius: 16px; padding: 32px 16px; font-size: 42px; cursor: pointer; border: 2px solid var(--border); background: var(--surface); transition: all 0.15s; text-align: center; }
+.ox-btn.o-btn { border-color: rgba(52,211,153,0.4); }
+.ox-btn.x-btn { border-color: rgba(248,113,113,0.4); }
+.ox-btn.o-btn:hover:not(:disabled) { background: rgba(52,211,153,0.1); border-color: var(--green); transform: scale(1.03); }
+.ox-btn.x-btn:hover:not(:disabled) { background: rgba(248,113,113,0.1); border-color: var(--red); transform: scale(1.03); }
+.ox-btn.ok { background: rgba(52,211,153,0.15); border-color: var(--green); }
+.ox-btn.ng { background: rgba(248,113,113,0.15); border-color: var(--red); }
+.ox-btn:disabled { cursor: default; }
+.seq-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 16px 0; }
+.seq-st { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 500; }
+.seq-arr { color: var(--text-dim); font-size: 11px; }
+.seq-missing { background: rgba(79,142,247,0.15); border: 1px solid rgba(79,142,247,0.4); border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 700; color: var(--accent); }
+
+/* RESULT */
+.result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px 20px; text-align: center; margin: 20px; }
+.result-emoji { font-size: 48px; margin-bottom: 12px; }
+.result-title { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+.result-pct { font-size: 42px; font-weight: 900; color: var(--accent); font-family: 'Zen Kaku Gothic New', sans-serif; }
+.result-pct span { font-size: 18px; color: var(--text-sub); font-weight: 400; }
+.result-msg { font-size: 13px; color: var(--text-sub); margin-top: 8px; }
+.result-stats { display: flex; gap: 10px; justify-content: center; margin: 16px 0; }
+.rs { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+.rs .v { font-size: 20px; font-weight: 700; font-family: 'Zen Kaku Gothic New', sans-serif; }
+.rs .l { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+.result-actions { display: flex; flex-direction: column; gap: 8px; margin: 0 20px 20px; }
+
+/* STATS */
+.stats-section { padding: 16px; }
+.weak-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.weak-rate { margin-left: auto; font-size: 12px; color: var(--red); font-weight: 700; }
+.hist-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; margin-bottom: 6px; }
+.hist-type { color: var(--text-sub); }
+.hist-time { font-size: 10px; color: var(--text-dim); }
+.empty { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 14px; }
+.empty .ei { font-size: 36px; margin-bottom: 10px; }
+
+/* LINE CHIP */
+.lchip { display: inline-block; color: white; padding: 3px 10px; border-radius: 14px; font-size: 12px; font-weight: 700; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ═══════════════════════════════════════════
+   CONFIRMED STATION DATA
+═══════════════════════════════════════════ */
+const LINES = [
+  {id:'midosuji',  name:'御堂筋線',       short:'御', color:'#e60012'},
+  {id:'chuo',      name:'中央線',         short:'中', color:'#16a34a'},
+  {id:'yotsubashi',name:'四つ橋線',       short:'四', color:'#2563eb'},
+  {id:'sakaisuji', name:'堺筋線',         short:'堺', color:'#b45309'},
+  {id:'tanimachi', name:'谷町線',         short:'谷', color:'#8b4a9c'},
+  {id:'sennichimae',name:'千日前線',      short:'千', color:'#f97316'},
+  {id:'nagahori',  name:'長堀鶴見緑地線', short:'長', color:'#0891b2'},
+  {id:'kanjo',     name:'大阪環状線',     short:'環', color:'#ca8a04'},
+];
+
+const LINE_STATIONS = {
+  midosuji: [
+    {n:'江坂',       k:'えさか'},
+    {n:'東三国',     k:'ひがしみくに'},
+    {n:'新大阪',     k:'しんおおさか'},
+    {n:'西中島南方', k:'にしなかじまみなみがた'},
+    {n:'中津',       k:'なかつ'},
+    {n:'梅田',       k:'うめだ'},
+    {n:'淀屋橋',     k:'よどやばし'},
+    {n:'本町',       k:'ほんまち'},
+    {n:'心斎橋',     k:'しんさいばし'},
+    {n:'なんば',     k:'なんば'},
+    {n:'大国町',     k:'だいこくちょう'},
+    {n:'動物園前',   k:'どうぶつえんまえ'},
+    {n:'天王寺',     k:'てんのうじ'},
+    {n:'昭和町',     k:'しょうわちょう'},
+    {n:'西田辺',     k:'にしたなべ'},
+    {n:'長居',       k:'ながい'},
+    {n:'あびこ',     k:'あびこ'},
+    {n:'北花田',     k:'きたはなだ'},
+  ],
+  chuo: [
+    {n:'夢洲',           k:'ゆめしま'},
+    {n:'コスモスクエア',  k:'こすもすくえあ'},
+    {n:'大阪港',         k:'おおさかこう'},
+    {n:'朝潮橋',         k:'あさしおばし'},
+    {n:'弁天町',         k:'べんてんちょう'},
+    {n:'九条',           k:'くじょ'},
+    {n:'阿波座',         k:'あわざ'},
+    {n:'本町',           k:'ほんまち'},
+    {n:'堺筋本町',       k:'さかいすじほんまち'},
+    {n:'谷町四丁目',     k:'たにまちよんちょうめ'},
+    {n:'森ノ宮',         k:'もりのみや'},
+    {n:'緑橋',           k:'みどりばし'},
+    {n:'深江橋',         k:'ふかえばし'},
+    {n:'高井田',         k:'たかいだ'},
+  ],
+  yotsubashi: [
+    {n:'西梅田',     k:'にしうめだ'},
+    {n:'肥後橋',     k:'ひごばし'},
+    {n:'本町',       k:'ほんまち'},
+    {n:'四ツ橋',     k:'よつばし'},
+    {n:'なんば',     k:'なんば'},
+    {n:'大国町',     k:'だいこくちょう'},
+    {n:'花園町',     k:'はなぞのちょう'},
+    {n:'岸里',       k:'きしのさと'},
+    {n:'玉出',       k:'たまで'},
+    {n:'北加賀屋',   k:'きたかがや'},
+    {n:'住之江公園', k:'すみのえこうえん'},
+  ],
+  sakaisuji: [
+    {n:'天神橋筋六丁目', k:'てんじんばしすじろくちょうめ'},
+    {n:'扇町',           k:'おうぎまち'},
+    {n:'南森町',         k:'みなみもりまち'},
+    {n:'北浜',           k:'きたはま'},
+    {n:'堺筋本町',       k:'さかいすじほんまち'},
+    {n:'長堀橋',         k:'ながほりばし'},
+    {n:'日本橋',         k:'にっぽんばし'},
+    {n:'恵美須町',       k:'えびすちょう'},
+    {n:'動物園前',       k:'どうぶつえんまえ'},
+    {n:'天下茶屋',       k:'てんがちゃや'},
+  ],
+  tanimachi: [
+    {n:'大日',               k:'だいにち'},
+    {n:'守口',               k:'もりぐち'},
+    {n:'太子橋今市',         k:'たいしばしいまいち'},
+    {n:'千林大宮',           k:'せんばやしおおみや'},
+    {n:'関目高殿',           k:'せきめたかどの'},
+    {n:'野江内代',           k:'のえうちんだい'},
+    {n:'都島',               k:'みやこじま'},
+    {n:'天神橋筋六丁目',     k:'てんじんばしすじろくちょうめ'},
+    {n:'中崎町',             k:'なかざきちょう'},
+    {n:'東梅田',             k:'ひがしうめだ'},
+    {n:'南森町',             k:'みなみもりまち'},
+    {n:'天満橋',             k:'てんまばし'},
+    {n:'谷町四丁目',         k:'たにまちよんちょうめ'},
+    {n:'谷町六丁目',         k:'たにまちろくちょうめ'},
+    {n:'谷町九丁目',         k:'たにまちきゅうちょうめ'},
+    {n:'四天王寺前夕陽ヶ丘', k:'してんのうじまえゆうひがおか'},
+    {n:'天王寺',             k:'てんのうじ'},
+    {n:'阿倍野',             k:'あべの'},
+    {n:'文の里',             k:'ふみのさと'},
+    {n:'田辺',               k:'たなべ'},
+    {n:'駒川中野',           k:'こまがわなかの'},
+    {n:'平野',               k:'ひらの'},
+    {n:'喜連瓜破',           k:'きれうりわり'},
+    {n:'出戸',               k:'いでと'},
+    {n:'長原',               k:'ながはら'},
+    {n:'八尾南',             k:'やおみなみ'},
+  ],
+  sennichimae: [
+    {n:'野田阪神',   k:'のだはんしん'},
+    {n:'玉川',       k:'たまがわ'},
+    {n:'阿波座',     k:'あわざ'},
+    {n:'西長堀',     k:'にしながほり'},
+    {n:'桜川',       k:'さくらがわ'},
+    {n:'なんば',     k:'なんば'},
+    {n:'日本橋',     k:'にっぽんばし'},
+    {n:'谷町九丁目', k:'たにまちきゅうちょうめ'},
+    {n:'鶴橋',       k:'つるはし'},
+    {n:'今里',       k:'いまざと'},
+    {n:'新深江',     k:'しんふかえ'},
+    {n:'小路',       k:'しょうじ'},
+    {n:'北巽',       k:'きたたつみ'},
+    {n:'南巽',       k:'みなみたつみ'},
+  ],
+  nagahori: [
+    {n:'大正',               k:'たいしょう'},
+    {n:'ドーム前千代崎',     k:'どーむまえちよさき'},
+    {n:'西長堀',             k:'にしながほり'},
+    {n:'西大橋',             k:'にしおおはし'},
+    {n:'心斎橋',             k:'しんさいばし'},
+    {n:'長堀橋',             k:'ながほりばし'},
+    {n:'松屋町',             k:'まつやまち'},
+    {n:'谷町六丁目',         k:'たにまちろくちょうめ'},
+    {n:'玉造',               k:'たまつくり'},
+    {n:'森ノ宮',             k:'もりのみや'},
+    {n:'大阪ビジネスパーク', k:'おおさかびじねすぱーく'},
+    {n:'京橋',               k:'きょうばし'},
+    {n:'蒲生四丁目',         k:'がもうよんちょうめ'},
+    {n:'今福鶴見',           k:'いまふくつるみ'},
+    {n:'横堤',               k:'よこづつみ'},
+    {n:'鶴見緑地',           k:'つるみりょくち'},
+    {n:'門真南',             k:'かどまみなみ'},
+  ],
+  kanjo: [
+    {n:'大阪',       k:'おおさか'},
+    {n:'福島',       k:'ふくしま'},
+    {n:'野田',       k:'のだ'},
+    {n:'西九条',     k:'にしくじょ'},
+    {n:'弁天町',     k:'べんてんちょう'},
+    {n:'大正',       k:'たいしょう'},
+    {n:'芦原橋',     k:'あしはらばし'},
+    {n:'今宮',       k:'いまみや'},
+    {n:'新今宮',     k:'しんいまみや'},
+    {n:'天王寺',     k:'てんのうじ'},
+    {n:'寺田町',     k:'てらだちょう'},
+    {n:'桃谷',       k:'ももだに'},
+    {n:'鶴橋',       k:'つるはし'},
+    {n:'玉造',       k:'たまつくり'},
+    {n:'森ノ宮',     k:'もりのみや'},
+    {n:'大阪城公園', k:'おおさかじょうこうえん'},
+    {n:'京橋',       k:'きょうばし'},
+    {n:'桜ノ宮',     k:'さくらのみや'},
+    {n:'天満',       k:'てんま'},
+  ],
+};
+
+// 乗換マップ（駅名 → 乗換路線名リスト）
+const TRANSFER_MAP = {
+  '本町':             ['御堂筋線','中央線','四つ橋線'],
+  '堺筋本町':         ['中央線','堺筋線'],
+  '谷町四丁目':       ['中央線','谷町線'],
+  '森ノ宮':           ['中央線','大阪環状線','長堀鶴見緑地線'],
+  '弁天町':           ['中央線','大阪環状線'],
+  '大正':             ['大阪環状線','長堀鶴見緑地線'],
+  '天王寺':           ['御堂筋線','谷町線','大阪環状線'],
+  'なんば':           ['御堂筋線','四つ橋線','千日前線'],
+  '日本橋':           ['堺筋線','千日前線'],
+  '阿波座':           ['中央線','千日前線'],
+  '西長堀':           ['千日前線','長堀鶴見緑地線'],
+  '京橋':             ['大阪環状線','長堀鶴見緑地線'],
+  '天神橋筋六丁目':   ['谷町線','堺筋線'],
+  '南森町':           ['谷町線','堺筋線'],
+  '長堀橋':           ['堺筋線','長堀鶴見緑地線'],
+  '谷町六丁目':       ['谷町線','長堀鶴見緑地線'],
+  '心斎橋':           ['御堂筋線','長堀鶴見緑地線'],
+  '谷町九丁目':       ['谷町線','千日前線'],
+  '鶴橋':             ['大阪環状線','千日前線'],
+  '大国町':           ['御堂筋線','四つ橋線'],
+  '動物園前':         ['御堂筋線','堺筋線'],
+  '天下茶屋':         ['御堂筋線','堺筋線'],
+  '梅田':             ['谷町線(東梅田)','四つ橋線(西梅田)'],
+};
+
+function getTransfers(stationName, currentLineId) {
+  const all = TRANSFER_MAP[stationName];
+  if (!all) return [];
+  return all.filter(l => {
+    const found = LINES.find(x => x.name === l);
+    return !found || found.id !== currentLineId;
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS / STORAGE
+═══════════════════════════════════════════ */
+const SK = 'olm_progress_v3';
+const HK = 'olm_history_v3';
+function loadP(){ try{ return JSON.parse(localStorage.getItem(SK)||'{}'); }catch(e){ return {}; } }
+function saveP(p){ localStorage.setItem(SK,JSON.stringify(p)); }
+function loadH(){ try{ return JSON.parse(localStorage.getItem(HK)||'[]'); }catch(e){ return []; } }
+function saveH(h){ localStorage.setItem(HK,JSON.stringify(h.slice(-200))); }
+function pkey(lid,nm){ return lid+'|'+nm; }
+
+function recordAns(lineId,stationName,correct){
+  const p=loadP(), k=pkey(lineId,stationName);
+  if(!p[k]) p[k]={c:0,w:0,lv:0};
+  if(correct){ p[k].c++; const c=p[k].c; p[k].lv=c>=8?4:c>=5?3:c>=3?2:c>=1?1:0; }
+  else p[k].w++;
+  saveP(p);
+}
+function getLv(lid,nm){ return (loadP()[pkey(lid,nm)]||{}).lv||0; }
+function lvLabel(l){ return ['未学習','初級','中級','上級','習得'][l]||'未学習'; }
+
+function allKeys(){
+  const r=[];
+  LINES.forEach(l=>LINE_STATIONS[l.id].forEach(s=>r.push(pkey(l.id,s.n))));
+  return r;
+}
+function overallPct(){
+  const p=loadP(),keys=allKeys();
+  return Math.round(keys.reduce((a,k)=>a+(p[k]?.lv||0),0)/(keys.length*4)*100);
+}
+function linePct(lid){
+  const p=loadP(),sts=LINE_STATIONS[lid]||[];
+  return Math.round(sts.reduce((a,s)=>a+(p[pkey(lid,s.n)]?.lv||0),0)/(sts.length*4)*100);
+}
+function totalAns(){ return Object.values(loadP()).reduce((a,v)=>a+v.c+v.w,0); }
+function correctRate(){
+  const p=loadP();
+  const c=Object.values(p).reduce((a,v)=>a+v.c,0),t=Object.values(p).reduce((a,v)=>a+v.c+v.w,0);
+  return t?Math.round(c/t*100):0;
+}
+function learnedCnt(){ return Object.values(loadP()).filter(v=>v.lv>=4).length; }
+function weakSts(){
+  const p=loadP();
+  return Object.entries(p)
+    .filter(([,v])=>v.c+v.w>=2)
+    .map(([k,v])=>{ const [lid,...r]=k.split('|');const nm=r.join('|'); return {lid,nm,...v,rate:Math.round(v.c/(v.c+v.w)*100)}; })
+    .filter(s=>s.rate<70).sort((a,b)=>a.rate-b.rate).slice(0,10);
+}
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]; } return b; }
+function pick(a,n){ return shuffle(a).slice(0,n); }
+function lColor(id){ return LINES.find(l=>l.id===id)?.color||'#888'; }
+function lName(id){ return LINES.find(l=>l.id===id)?.name||id; }
+function timeAgo(ts){ const d=Date.now()-ts; if(d<60000)return 'たった今'; if(d<3600000)return Math.floor(d/60000)+'分前'; if(d<86400000)return Math.floor(d/3600000)+'時間前'; return Math.floor(d/86400000)+'日前'; }
+
+function allFlat(){
+  const seen=new Set(),r=[];
+  LINES.forEach(l=>LINE_STATIONS[l.id].forEach(s=>{
+    const k=l.id+'|'+s.n;
+    if(!seen.has(k)){ seen.add(k); r.push({...s,lid:l.id}); }
+  }));
+  return r;
+}
+
+/* ═══════════════════════════════════════════
+   QUIZ GENERATORS
+═══════════════════════════════════════════ */
+function genAdjacent(){
+  const line=LINES[Math.floor(Math.random()*LINES.length)];
+  const sts=LINE_STATIONS[line.id];
+  const idx=Math.floor(Math.random()*sts.length);
+  const target=sts[idx];
+  const correct=[];
+  if(idx>0) correct.push(sts[idx-1]);
+  if(idx<sts.length-1) correct.push(sts[idx+1]);
+  const excl=new Set([target.n,...correct.map(s=>s.n)]);
+  const pool=allFlat().filter(s=>!excl.has(s.n));
+  const wrongs=pick(pool,Math.max(2,4-correct.length));
+  const choices=shuffle([
+    ...correct.map(s=>({nm:s.n,ok:true})),
+    ...wrongs.map(s=>({nm:s.n,ok:false}))
+  ]);
+  return {type:'adjacent',lid:line.id,stn:target.n,
+    question:`「${target.n}」の隣の駅を全て選んでください`,
+    sub:`${line.name} ／ 複数選択`,
+    choices, correctNm:correct.map(s=>s.n), multi:true};
+}
+
+function genLine(){
+  const all=allFlat();
+  const target=all[Math.floor(Math.random()*all.length)];
+  const correctIds=LINES.filter(l=>LINE_STATIONS[l.id].find(s=>s.n===target.n)).map(l=>l.id);
+  const wrongs=pick(LINES.filter(l=>!correctIds.includes(l.id)),Math.min(4,LINES.length-correctIds.length));
+  const choices=shuffle([
+    ...correctIds.map(id=>({nm:id,label:lName(id),ok:true})),
+    ...wrongs.map(l=>({nm:l.id,label:l.name,ok:false}))
+  ]);
+  return {type:'line',lid:target.lid,stn:target.n,
+    question:`「${target.n}」が通る路線を全て選んでください`,
+    sub:'複数路線がある場合は全て選択',
+    choices, correctNm:correctIds, multi:true};
+}
+
+function genMissing(){
+  const line=LINES[Math.floor(Math.random()*LINES.length)];
+  const sts=LINE_STATIONS[line.id];
+  if(sts.length<4) return genAdjacent();
+  const start=Math.floor(Math.random()*(sts.length-4));
+  const count=4+Math.floor(Math.random()*2);
+  const seq=sts.slice(start,start+count);
+  const mi=1+Math.floor(Math.random()*(seq.length-2));
+  const missing=seq[mi];
+  const displayed=seq.map((s,i)=>i===mi?null:s);
+  const excl=new Set(seq.map(s=>s.n));
+  const pool=allFlat().filter(s=>!excl.has(s.n));
+  const wrongs=pick(pool,3);
+  const choices=shuffle([
+    {nm:missing.n,ok:true},
+    ...wrongs.map(s=>({nm:s.n,ok:false}))
+  ]);
+  return {type:'missing',lid:line.id,stn:missing.n,
+    question:'「？」に入る駅を選んでください',
+    sub:line.name, displayed, choices, correctNm:[missing.n], multi:false};
+}
+
+function genSort(){
+  const line=LINES[Math.floor(Math.random()*LINES.length)];
+  const sts=LINE_STATIONS[line.id];
+  if(sts.length<4) return genAdjacent();
+  const start=Math.floor(Math.random()*(sts.length-4));
+  const count=4+Math.floor(Math.random()*2);
+  const seq=sts.slice(start,start+count);
+  return {type:'sort',lid:line.id,stn:seq[0].n,
+    question:'駅を正しい順番に並べてください',
+    sub:line.name,
+    correctOrder:seq.map(s=>s.n),
+    shuffled:shuffle([...seq])};
+}
+
+function genOx(){
+  const line=LINES[Math.floor(Math.random()*LINES.length)];
+  const sts=LINE_STATIONS[line.id];
+  if(sts.length<3) return genAdjacent();
+  const start=Math.floor(Math.random()*(sts.length-3));
+  const seq=sts.slice(start,start+3);
+  const isOk=Math.random()>0.45;
+  let disp=[...seq];
+  if(!isOk){
+    const i=Math.floor(Math.random()*disp.length);
+    let j; do{j=Math.floor(Math.random()*disp.length);}while(j===i);
+    [disp[i],disp[j]]=[disp[j],disp[i]];
+  }
+  return {type:'ox',lid:line.id,stn:seq[0].n,
+    question:'この駅の並び順は正しいですか？',
+    sub:line.name, disp, isOk};
+}
+
+function genTransfer(){
+  const pairs=[
+    {a:'midosuji', b:'chuo',        s:'本町',           h:'御堂筋線・中央線・四つ橋線が交わる中心乗換駅'},
+    {a:'midosuji', b:'tanimachi',   s:'天王寺',         h:'御堂筋線・谷町線・環状線が集まる南部の拠点'},
+    {a:'midosuji', b:'nagahori',    s:'心斎橋',         h:'御堂筋線と長堀鶴見緑地線の乗換'},
+    {a:'midosuji', b:'yotsubashi',  s:'なんば',         h:'御堂筋・四つ橋・千日前の巨大乗換ターミナル'},
+    {a:'midosuji', b:'yotsubashi',  s:'大国町',         h:'御堂筋線と四つ橋線が交わる'},
+    {a:'midosuji', b:'sakaisuji',   s:'天下茶屋',       h:'御堂筋線と堺筋線の南部乗換'},
+    {a:'midosuji', b:'sakaisuji',   s:'動物園前',       h:'御堂筋線と堺筋線の乗換'},
+    {a:'chuo',     b:'tanimachi',   s:'谷町四丁目',     h:'中央線と谷町線の交差点'},
+    {a:'chuo',     b:'sakaisuji',   s:'堺筋本町',       h:'中央線と堺筋線の乗換'},
+    {a:'chuo',     b:'nagahori',    s:'森ノ宮',         h:'中央線・環状線・長堀線が集まる'},
+    {a:'chuo',     b:'kanjo',       s:'弁天町',         h:'中央線と環状線の乗換'},
+    {a:'chuo',     b:'sennichimae', s:'阿波座',         h:'中央線と千日前線の乗換'},
+    {a:'sakaisuji',b:'tanimachi',   s:'天神橋筋六丁目', h:'堺筋線と谷町線の北端乗換'},
+    {a:'sakaisuji',b:'tanimachi',   s:'南森町',         h:'堺筋線と谷町線の乗換'},
+    {a:'sakaisuji',b:'sennichimae', s:'日本橋',         h:'堺筋線と千日前線の乗換'},
+    {a:'sakaisuji',b:'nagahori',    s:'長堀橋',         h:'堺筋線と長堀鶴見緑地線の乗換'},
+    {a:'sennichimae',b:'nagahori',  s:'西長堀',         h:'千日前線と長堀鶴見緑地線の乗換'},
+    {a:'sennichimae',b:'tanimachi', s:'谷町九丁目',     h:'千日前線と谷町線の乗換'},
+    {a:'nagahori', b:'kanjo',       s:'京橋',           h:'長堀鶴見緑地線と環状線の乗換'},
+    {a:'nagahori', b:'kanjo',       s:'大正',           h:'長堀鶴見緑地線と環状線の大正駅'},
+    {a:'tanimachi',b:'nagahori',    s:'谷町六丁目',     h:'谷町線と長堀鶴見緑地線の乗換'},
+  ];
+  const pair=pairs[Math.floor(Math.random()*pairs.length)];
+  const excl=new Set([pair.s]);
+  const wPool=['梅田','心斎橋','天満橋','北浜','玉出','今宮','長居','蒲生四丁目','緑橋','朝潮橋','淀屋橋','桃谷','鶴見緑地','野田阪神'];
+  const wrongs=wPool.filter(n=>!excl.has(n)).slice(0,3);
+  const choices=shuffle([{nm:pair.s,ok:true},...wrongs.map(n=>({nm:n,ok:false}))]);
+  return {type:'transfer',lid:pair.a,stn:pair.s,
+    aId:pair.a,bId:pair.b,
+    question:`${lName(pair.a)}と${lName(pair.b)}の乗換駅はどれですか？`,
+    sub:`${lName(pair.a)} ⇄ ${lName(pair.b)}`,
+    choices, correctNm:[pair.s], hint:pair.h, multi:false};
+}
+
+function genQ(type){
+  const map={adjacent:genAdjacent,line:genLine,missing:genMissing,sort:genSort,ox:genOx,transfer:genTransfer};
+  return (map[type]||genAdjacent)();
+}
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const S={
+  page:'home', activeTab:'midosuji',
+  quiz:null, quizType:'adjacent',
+  answered:false, selected:[], sortOrder:[],
+  session:{total:10,correct:0}, sidx:0,
+};
+let dragI=null;
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function go(page,opts={}){
+  Object.assign(S,opts);
+  S.page=page;
+  if(page==='transfer_quiz'){ document.getElementById('app').innerHTML=pTransfer(); window.scrollTo(0,0); return; }
+  document.getElementById('app').innerHTML=pages[page]?pages[page]():pHome();
+  postRender();
+  window.scrollTo(0,0);
+}
+
+const pages={
+  home:pHome, linelist:pLineList, quizselect:pQuizSelect,
+  quiz:pQuiz, result:pResult, stats:pStats, advanced:pAdvanced,
+};
+
+function postRender(){
+  const ring=document.getElementById('ring-main');
+  if(!ring) return;
+  const pct=overallPct(),c=2*Math.PI*40;
+  setTimeout(()=>{ ring.style.strokeDashoffset=c*(1-pct/100); },50);
+}
+
+/* ─── HOME ─── */
+function pHome(){
+  const pct=overallPct(),c=2*Math.PI*40,dash=c*(1-pct/100);
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">大阪路線マスター</div><div class="header-sub">OSAKA LINE MASTER</div></div>
+  </div>
+  <div class="home-hero">
+    <div class="hero-label">総合学習率</div>
+    <div class="hero-stat">${pct}<span>%</span></div>
+    <div class="hero-desc">8路線 全駅を完全マスターしよう</div>
+    <div class="progress-ring-wrap">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle class="progress-ring-bg" cx="45" cy="45" r="40"/>
+        <circle class="progress-ring-fg" cx="45" cy="45" r="40"
+          stroke-dasharray="${c}" stroke-dashoffset="${dash}" id="ring-main"/>
+      </svg>
+    </div>
+  </div>
+  <div class="section">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="val">${totalAns()}</div><div class="lbl">回答数</div></div>
+      <div class="stat-card"><div class="val">${correctRate()}<span style="font-size:14px">%</span></div><div class="lbl">正答率</div></div>
+      <div class="stat-card"><div class="val">${learnedCnt()}</div><div class="lbl">習得駅数</div></div>
+    </div>
+    <div class="section-title">路線別進捗</div>
+    <div class="line-progress-list">
+      ${LINES.map(l=>{
+        const p=linePct(l.id);
+        return `<div class="line-prog-item">
+          <div class="line-dot" style="background:${l.color}"></div>
+          <div class="line-prog-name">${l.name}</div>
+          <div class="line-prog-bar-wrap">
+            <div class="line-prog-bar"><div class="line-prog-bar-fill" style="width:${p}%;background:${l.color}"></div></div>
+            <div class="line-prog-pct">${p}%</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">メニュー</div>
+    <div class="menu-grid">
+      <div class="menu-btn accent-btn" onclick="go('quizselect')">
+        <div class="menu-btn-icon">🎯</div><div class="menu-btn-title">クイズ</div><div class="menu-btn-sub">5種類の問題</div>
+      </div>
+      <div class="menu-btn" onclick="go('linelist')">
+        <div class="menu-btn-icon">📋</div><div class="menu-btn-title">路線一覧</div><div class="menu-btn-sub">全駅を確認</div>
+      </div>
+      <div class="menu-btn" onclick="go('stats')">
+        <div class="menu-btn-icon">📊</div><div class="menu-btn-title">成績</div><div class="menu-btn-sub">苦手・履歴</div>
+      </div>
+      <div class="menu-btn" onclick="go('advanced')">
+        <div class="menu-btn-icon">⭐</div><div class="menu-btn-title">上級</div><div class="menu-btn-sub">乗換問題</div>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+/* ─── LINE LIST ─── */
+function pLineList(){
+  const line=LINES.find(l=>l.id===S.activeTab);
+  const sts=LINE_STATIONS[S.activeTab]||[];
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">路線一覧</div><div class="header-sub">LINE DIRECTORY</div></div>
+    <button class="header-back" onclick="go('home')">← ホーム</button>
+  </div>
+  <div class="tab-scroll">
+    ${LINES.map(l=>`<div class="tab-pill ${l.id===S.activeTab?'active':''}"
+      style="${l.id===S.activeTab?`background:${l.color};color:white;border-color:${l.color}`:''}"
+      onclick="S.activeTab='${l.id}';go('linelist')">${l.name}</div>`).join('')}
+  </div>
+  <div style="padding:10px 16px 4px;font-size:12px;color:var(--text-sub)">${sts.length}駅</div>
+  <div class="station-list">
+    ${sts.map((s,i)=>{
+      const lv=getLv(line.id,s.n);
+      const tr=getTransfers(s.n,line.id);
+      return `<div class="station-row">
+        <span class="stn-num">${i+1}</span>
+        <div class="stn-bar" style="background:${line.color}"></div>
+        <div class="stn-info">
+          <div class="stn-name">${s.n}</div>
+          <div class="stn-kana">${s.k}</div>
+          ${tr.length?`<div class="transfer-badges">${tr.map(t=>`<span class="transfer-badge">${t}</span>`).join('')}</div>`:''}
+        </div>
+        <span class="level-badge lv${lv}">${lvLabel(lv)}</span>
+        ${tr.length?'<span style="font-size:16px;margin-left:2px">⇄</span>':''}
+      </div>`;
+    }).join('')}
+    ${S.activeTab==='kanjo'?`<div class="station-row" style="opacity:0.35">
+      <span class="stn-num">↩</span>
+      <div class="stn-bar" style="background:${line.color}"></div>
+      <div class="stn-info"><div class="stn-name">大阪（環状・起点へ）</div></div>
+    </div>`:''}
+  </div></div>`;
+}
+
+/* ─── QUIZ SELECT ─── */
+function pQuizSelect(){
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">クイズ選択</div><div class="header-sub">QUIZ TYPE</div></div>
+    <button class="header-back" onclick="go('home')">← ホーム</button>
+  </div>
+  <div class="quiz-select-list">
+    ${[
+      {id:'adjacent',icon:'🔗',title:'隣接駅クイズ',desc:'隣にある駅を全て選ぼう'},
+      {id:'line',    icon:'🗺️',title:'路線所属クイズ',desc:'駅が通る路線を選ぼう'},
+      {id:'missing', icon:'❓',title:'駅抜けクイズ',desc:'欠けている駅を答えよう',badge:'おすすめ',bcls:'badge-new'},
+      {id:'sort',    icon:'🔀',title:'並び替えクイズ',desc:'駅を正しい順に並べよう'},
+      {id:'ox',      icon:'⭕',title:'正誤判定クイズ',desc:'駅順が正しいか判定しよう'},
+    ].map(t=>`<div class="quiz-type-card" onclick="startQ('${t.id}')">
+      <span class="qt-icon">${t.icon}</span>
+      <div><div class="qt-title">${t.title}</div><div class="qt-desc">${t.desc}</div></div>
+      ${t.badge?`<span class="qt-badge ${t.bcls||''}">${t.badge}</span>`:''}
+    </div>`).join('')}
+    <div class="quiz-type-card accent-btn" onclick="startQ('random')">
+      <span class="qt-icon">🎲</span>
+      <div><div class="qt-title">ランダムミックス</div><div class="qt-desc">全種類をランダムで出題</div></div>
+    </div>
+  </div></div>`;
+}
+
+/* ─── QUIZ FLOW ─── */
+function startQ(type){
+  S.quizType=type; S.session={total:10,correct:0}; S.sidx=0;
+  nextQ();
+}
+function nextQ(){
+  if(S.sidx>=S.session.total){ go('result'); return; }
+  const types=['adjacent','line','missing','sort','ox'];
+  const t=S.quizType==='random'?types[Math.floor(Math.random()*types.length)]:S.quizType;
+  S.quiz=genQ(t);
+  S.answered=false; S.selected=[];
+  if(S.quiz.type==='sort') S.sortOrder=[...S.quiz.shuffled];
+  go('quiz');
+}
+
+/* ─── QUIZ PAGE ─── */
+function pQuiz(){
+  const q=S.quiz; if(!q) return pHome();
+  const prog=(S.sidx/S.session.total)*100;
+  const tn={adjacent:'隣接駅',line:'路線所属',missing:'駅抜け',sort:'並び替え',ox:'正誤判定'}[q.type]||'';
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">クイズ</div><div class="header-sub">${tn}</div></div>
+    <button class="header-back" onclick="go('quizselect')">中断</button>
+  </div>
+  <div class="quiz-header">
+    <div class="quiz-meta">
+      <span class="quiz-type-label">${tn}</span>
+      <span class="quiz-score"><span class="cor">${S.session.correct}</span> / <span class="inc">${S.sidx}</span></span>
+    </div>
+    <div class="qpbar"><div class="qpfill" style="width:${prog}%"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="q-label">問題 ${S.sidx+1} / ${S.session.total}</div>
+    ${qBody(q)}
+  </div></div>`;
+}
+
+function qBody(q){
+  if(q.type==='sort')    return qSort();
+  if(q.type==='ox')      return qOx();
+  if(q.type==='missing') return qMissing();
+  return qChoice();
+}
+
+function qChoice(){
+  const q=S.quiz,ans=S.answered;
+  return `
+  <div class="q-text">${q.question}</div>
+  <div class="q-sub">${q.sub||''}</div>
+  <div class="choices">
+    ${q.choices.map(c=>{
+      const id=c.nm;
+      const sel=S.selected.includes(id);
+      let cls=ans?(c.ok?'ok':(sel?'ng':'')):(sel?'sel':'');
+      const mark=ans?(c.ok?'✓':(sel?'✗':'')):(sel?'✓':'');
+      const label=q.type==='line'?lName(c.nm):c.nm;
+      return `<button class="choice-btn ${cls}" ${ans?'disabled':''} onclick="pick_choice('${id}',${!!q.multi})">
+        <div class="cmark">${mark}</div>${label}
+      </button>`;
+    }).join('')}
+  </div>
+  ${ans?explain():''}
+  ${!ans&&q.multi?`<div class="q-actions"><button class="btn-p" onclick="commit()">回答する</button></div>`:''}
+  ${ans?`<div class="q-actions"><button class="btn-p" onclick="nextQ()">次の問題 →</button></div>`:''}`;
+}
+
+function qMissing(){
+  const q=S.quiz,ans=S.answered;
+  const seqH=q.displayed.map(s=>s
+    ?`<span class="seq-st">${s.n}</span>`
+    :`<span class="seq-missing">？</span>`
+  ).join('<span class="seq-arr">›</span>');
+  return `
+  <div class="q-text">${q.question}</div>
+  <div class="q-sub">${q.sub}</div>
+  <div class="seq-wrap">${seqH}</div>
+  <div class="choices">
+    ${q.choices.map(c=>{
+      const sel=S.selected.includes(c.nm);
+      let cls=ans?(c.ok?'ok':(sel?'ng':'')):(sel?'sel':'');
+      const mark=ans?(c.ok?'✓':(sel?'✗':'')):(sel?'✓':'');
+      return `<button class="choice-btn ${cls}" ${ans?'disabled':''} onclick="pick_single('${c.nm}')">
+        <div class="cmark">${mark}</div>${c.nm}
+      </button>`;
+    }).join('')}
+  </div>
+  ${ans?explain():''}
+  ${ans?`<div class="q-actions"><button class="btn-p" onclick="nextQ()">次の問題 →</button></div>`:''}`;
+}
+
+function qSort(){
+  const q=S.quiz,ans=S.answered;
+  const ok=ans&&JSON.stringify(S.sortOrder.map(s=>s.n))===JSON.stringify(q.correctOrder);
+  const itemStyle=ans?(ok?'border-color:var(--green);background:rgba(52,211,153,0.08)':'border-color:var(--red);background:rgba(248,113,113,0.08)'):'';
+  return `
+  <div class="q-text">${q.question}</div>
+  <div class="q-sub">${q.sub}</div>
+  <div class="sort-area">
+    ${S.sortOrder.map((s,i)=>`<div class="sort-item" draggable="${!ans}" style="${itemStyle}"
+      ondragstart="dStart(${i})" ondragover="dOver(event,${i})" ondrop="dDrop(${i})" ondragleave="dLeave(event)">
+      <span class="dhandle">${ans?(ok?'✓':'✗'):'⠿'}</span>
+      <span class="snum">${i+1}</span>${s.n}
+    </div>`).join('')}
+  </div>
+  ${ans?`<div class="explain"><strong>正解順：</strong>${q.correctOrder.join(' → ')}</div>`:''}
+  ${!ans?`<div class="q-actions"><button class="btn-p" onclick="commit()">この順番で回答</button></div>`:''}
+  ${ans?`<div class="q-actions"><button class="btn-p" onclick="nextQ()">次の問題 →</button></div>`:''}`;
+}
+
+function qOx(){
+  const q=S.quiz,ans=S.answered,ua=S.selected[0];
+  const userOk=ua===String(q.isOk);
+  return `
+  <div class="q-text">${q.question}</div>
+  <div class="q-sub">${q.sub}</div>
+  <div class="seq-wrap">${q.disp.map(s=>`<span class="seq-st">${s.n}</span>`).join('<span class="seq-arr">›</span>')}</div>
+  <div class="ox-btns">
+    <button class="ox-btn o-btn ${ans?(q.isOk?'ok':(ua==='true'?'ng':'')):''}"\
+      ${ans?'disabled':''} onclick="ansOx(true)">⭕</button>
+    <button class="ox-btn x-btn ${ans?(!q.isOk?'ok':(ua==='false'?'ng':'')):''}"\
+      ${ans?'disabled':''} onclick="ansOx(false)">❌</button>
+  </div>
+  ${ans?`<div class="explain">
+    <div class="eicon">${userOk?'🎉':'😅'}</div>
+    <strong>${userOk?'正解！':'不正解'}</strong><br>
+    この並び順は<strong>${q.isOk?'正しい ⭕':'間違い ❌'}</strong>でした
+  </div>`:''}
+  ${ans?`<div class="q-actions"><button class="btn-p" onclick="nextQ()">次の問題 →</button></div>`:''}`;
+}
+
+function explain(){
+  const q=S.quiz,ok=checkAns();
+  let detail='';
+  if(q.type==='adjacent') detail=`正解：<strong>${q.correctNm.join('、')}</strong>`;
+  else if(q.type==='line') detail=`正解の路線：<strong>${q.correctNm.map(id=>lName(id)).join('、')}</strong>`;
+  else if(q.type==='missing') detail=`正解：<strong>${q.correctNm[0]}</strong>`;
+  else if(q.type==='transfer') detail=`乗換駅：<strong>${q.correctNm[0]}</strong><br><span style="font-size:12px">${q.hint}</span>`;
+  return `<div class="explain">
+    <div class="eicon">${ok?'🎉':'😅'}</div>
+    <strong>${ok?'正解！':'不正解'}</strong><br>${detail}
+  </div>`;
+}
+
+function checkAns(){
+  const q=S.quiz;
+  if(q.type==='ox') return S.selected[0]===String(q.isOk);
+  if(q.type==='sort') return JSON.stringify(S.sortOrder.map(s=>s.n))===JSON.stringify(q.correctOrder);
+  const sel=new Set(S.selected),cor=new Set(q.correctNm);
+  if(sel.size!==cor.size) return false;
+  for(const x of cor) if(!sel.has(x)) return false;
+  return true;
+}
+
+/* ─── RESULT ─── */
+function pResult(){
+  const {correct,total}=S.session,pct=Math.round(correct/total*100);
+  const emoji=pct>=80?'🏆':pct>=60?'👍':pct>=40?'😊':'💪';
+  const msg=pct>=80?'素晴らしい！完璧に近い成績です':pct>=60?'いい調子！もう少しで上達します':pct>=40?'練習を続けましょう！':'基礎から頑張りましょう！';
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">クイズ結果</div><div class="header-sub">RESULT</div></div>
+    <button class="header-back" onclick="go('home')">← ホーム</button>
+  </div>
+  <div class="result-card">
+    <div class="result-emoji">${emoji}</div>
+    <div class="result-title">クイズ完了！</div>
+    <div class="result-pct">${pct}<span>%</span></div>
+    <div class="result-stats">
+      <div class="rs"><div class="v" style="color:var(--green)">${correct}</div><div class="l">正解</div></div>
+      <div class="rs"><div class="v" style="color:var(--red)">${total-correct}</div><div class="l">不正解</div></div>
+      <div class="rs"><div class="v">${total}</div><div class="l">合計</div></div>
+    </div>
+    <div class="result-msg">${msg}</div>
+  </div>
+  <div class="result-actions">
+    <button class="btn-p" onclick="startQ('${S.quizType}')">もう一度</button>
+    <button class="btn-s" onclick="go('quizselect')">クイズ選択に戻る</button>
+    <button class="btn-s" onclick="go('home')">ホームへ</button>
+  </div></div>`;
+}
+
+/* ─── STATS ─── */
+function pStats(){
+  const weak=weakSts(),hist=loadH().slice(-20).reverse();
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">成績</div><div class="header-sub">STATS</div></div>
+    <button class="header-back" onclick="go('home')">← ホーム</button>
+  </div>
+  <div class="stats-section">
+    <div class="section-title">学習サマリー</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="val">${overallPct()}<span style="font-size:12px">%</span></div><div class="lbl">学習率</div></div>
+      <div class="stat-card"><div class="val">${correctRate()}<span style="font-size:12px">%</span></div><div class="lbl">正答率</div></div>
+      <div class="stat-card"><div class="val">${totalAns()}</div><div class="lbl">回答数</div></div>
+    </div>
+  </div>
+  <div class="stats-section">
+    <div class="section-title">苦手駅 TOP${weak.length}</div>
+    ${weak.length?weak.map(s=>`<div class="weak-item">
+      <span class="level-badge lv${s.lv}">${lvLabel(s.lv)}</span>
+      <div><div style="font-size:14px;font-weight:500">${s.nm}</div><div style="font-size:10px;color:var(--text-sub)">${lName(s.lid)}</div></div>
+      <span class="weak-rate">${s.rate}%</span>
+    </div>`).join('')
+    :`<div class="empty"><div class="ei">🌟</div>苦手駅はまだありません</div>`}
+  </div>
+  <div class="stats-section">
+    <div class="section-title">回答履歴</div>
+    ${hist.length?hist.map(h=>`<div class="hist-item">
+      <span>${h.ok?'✅':'❌'}</span>
+      <span class="hist-type">${h.tp}</span>
+      <span style="flex:1">${h.nm}</span>
+      <span style="font-weight:700;color:${h.ok?'var(--green)':'var(--red)'}">${h.ok?'正解':'不正解'}</span>
+      <span class="hist-time">${timeAgo(h.ts)}</span>
+    </div>`).join('')
+    :`<div class="empty"><div class="ei">📝</div>まだ回答履歴はありません</div>`}
+  </div></div>`;
+}
+
+/* ─── ADVANCED ─── */
+function pAdvanced(){
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">上級モード</div><div class="header-sub">ADVANCED</div></div>
+    <button class="header-back" onclick="go('home')">← ホーム</button>
+  </div>
+  <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+    <div class="quiz-type-card" onclick="startTransfer()">
+      <span class="qt-icon">🔄</span>
+      <div><div class="qt-title">乗換駅クイズ</div><div class="qt-desc">2路線の共通乗換駅を答えよう</div></div>
+      <span class="qt-badge badge-adv">上級</span>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div class="section-title" style="margin-bottom:12px">主要乗換駅一覧</div>
+      ${Object.entries(TRANSFER_MAP).map(([nm,lines])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:14px;font-weight:600;flex:1">${nm}</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+            ${lines.map(l=>{
+              const lo=LINES.find(x=>x.name===l||x.name===l.replace(/\(.*\)/,''));
+              return lo
+                ?`<span class="lchip" style="background:${lo.color}">${lo.short}</span>`
+                :`<span style="font-size:10px;color:var(--text-sub);background:var(--surface2);padding:2px 6px;border-radius:8px">${l}</span>`;
+            }).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div></div>`;
+}
+
+/* ─── TRANSFER QUIZ ─── */
+function startTransfer(){
+  S.quizType='transfer'; S.session={total:10,correct:0}; S.sidx=0;
+  S.quiz=genQ('transfer'); S.answered=false; S.selected=[];
+  go('transfer_quiz');
+}
+
+function pTransfer(){
+  const q=S.quiz; if(!q) return pAdvanced();
+  const prog=(S.sidx/S.session.total)*100,ans=S.answered;
+  return `<div class="fade">
+  <div class="header">
+    <span class="header-icon">🚇</span>
+    <div><div class="header-title">乗換クイズ</div><div class="header-sub">上級モード</div></div>
+    <button class="header-back" onclick="go('advanced')">中断</button>
+  </div>
+  <div class="quiz-header">
+    <div class="quiz-meta">
+      <span class="quiz-type-label">乗換駅</span>
+      <span class="quiz-score"><span class="cor">${S.session.correct}</span> / <span class="inc">${S.sidx}</span></span>
+    </div>
+    <div class="qpbar"><div class="qpfill" style="width:${prog}%"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="q-label">問題 ${S.sidx+1} / ${S.session.total}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <span class="lchip" style="background:${lColor(q.aId)}">${lName(q.aId)}</span>
+      <span style="color:var(--text-sub)">⇄</span>
+      <span class="lchip" style="background:${lColor(q.bId)}">${lName(q.bId)}</span>
+    </div>
+    <div class="q-text">${q.question}</div>
+    <div class="choices" style="margin-top:16px">
+      ${q.choices.map(c=>{
+        const sel=S.selected.includes(c.nm);
+        let cls=ans?(c.ok?'ok':(sel?'ng':'')):(sel?'sel':'');
+        const mark=ans?(c.ok?'✓':(sel?'✗':'')):(sel?'✓':'');
+        return `<button class="choice-btn ${cls}" ${ans?'disabled':''} onclick="pick_single('${c.nm}')">
+          <div class="cmark">${mark}</div>${c.nm}
+        </button>`;
+      }).join('')}
+    </div>
+    ${ans?`<div class="explain">
+      <div class="eicon">${checkAns()?'🎉':'😅'}</div>
+      <strong>${checkAns()?'正解！':'不正解'}</strong><br>
+      乗換駅は<strong>${q.correctNm[0]}</strong>です。<br>
+      <span style="font-size:12px">${q.hint}</span>
+    </div>`:''}
+    ${ans?`<div class="q-actions"><button class="btn-p" onclick="nextTransfer()">次の問題 →</button></div>`:''}
+  </div></div>`;
+}
+
+function nextTransfer(){
+  if(S.sidx>=S.session.total){ go('result'); return; }
+  S.quiz=genQ('transfer'); S.answered=false; S.selected=[];
+  go('transfer_quiz');
+}
+
+/* ═══════════════════════════════════════════
+   EVENT HANDLERS
+═══════════════════════════════════════════ */
+function pick_choice(id,multi){
+  if(S.answered) return;
+  if(multi){ const i=S.selected.indexOf(id); if(i>=0) S.selected.splice(i,1); else S.selected.push(id); }
+  else { S.selected=[id]; }
+  go(S.page);
+}
+
+function pick_single(nm){
+  if(S.answered) return;
+  S.selected=[nm];
+  go(S.page);
+  setTimeout(()=>commit(),160);
+}
+
+function commit(){
+  if(S.answered) return;
+  S.answered=true;
+  const ok=checkAns();
+  if(ok) S.session.correct++;
+  S.sidx++;
+  recordAns(S.quiz.lid,S.quiz.stn,ok);
+  pushHist(ok);
+  go(S.page);
+}
+
+function ansOx(v){
+  if(S.answered) return;
+  S.selected=[String(v)];
+  S.answered=true;
+  const ok=(v===S.quiz.isOk);
+  if(ok) S.session.correct++;
+  S.sidx++;
+  recordAns(S.quiz.lid,S.quiz.stn,ok);
+  pushHist(ok);
+  go(S.page);
+}
+
+function pushHist(ok){
+  const q=S.quiz;
+  const tp={adjacent:'隣接駅',line:'路線所属',missing:'駅抜け',sort:'並び替え',ox:'正誤判定',transfer:'乗換駅'}[q.type]||q.type;
+  const h=loadH();
+  h.push({tp,nm:q.stn,ok,ts:Date.now()});
+  saveH(h);
+}
+
+/* Drag-n-drop for sort */
+function dStart(i){ dragI=i; }
+function dOver(e,i){ e.preventDefault(); document.querySelectorAll('.sort-item')[i]?.classList.add('over'); }
+function dLeave(e){ e.currentTarget.classList.remove('over'); }
+function dDrop(i){
+  if(dragI===null||dragI===i) return;
+  const arr=[...S.sortOrder],[m]=arr.splice(dragI,1);
+  arr.splice(i,0,m); S.sortOrder=arr; dragI=null;
+  go('quiz');
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+go('home');
+</script>
+</body>
+</html>
