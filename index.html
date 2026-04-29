@@ -133,11 +133,14 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 
 /* SORT */
 .sort-area { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.sort-item { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: grab; font-size: 14px; font-weight: 500; user-select: none; transition: all 0.12s; }
-.sort-item.dragging { opacity: 0.4; border-color: var(--accent); }
-.sort-item.over { border-color: var(--accent); background: rgba(79,142,247,0.1); transform: scale(1.01); }
-.dhandle { color: var(--text-dim); font-size: 16px; }
-.snum { font-size: 11px; color: var(--text-sub); width: 18px; text-align: center; }
+.sort-item { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; user-select: none; transition: border-color 0.15s, background 0.15s; }
+.sort-item.active-sel { border-color: var(--accent); background: rgba(79,142,247,0.12); }
+.snum { font-size: 11px; color: var(--text-sub); width: 18px; text-align: center; flex-shrink: 0; }
+.sort-name { flex: 1; }
+.sort-move-btns { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.sort-mv { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; width: 28px; height: 24px; font-size: 11px; cursor: pointer; color: var(--text-sub); display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+.sort-mv:hover:not(:disabled) { background: var(--accent); color: white; border-color: var(--accent); }
+.sort-mv:disabled { opacity: 0.2; cursor: default; }
 
 /* OX */
 .ox-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
@@ -197,8 +200,8 @@ const LINES = [
   {id:'yotsubashi',name:'四つ橋線',       short:'四', color:'#2563eb'},
   {id:'sakaisuji', name:'堺筋線',         short:'堺', color:'#b45309'},
   {id:'tanimachi', name:'谷町線',         short:'谷', color:'#8b4a9c'},
-  {id:'sennichimae',name:'千日前線',      short:'千', color:'#f97316'},
-  {id:'nagahori',  name:'長堀鶴見緑地線', short:'長', color:'#0891b2'},
+  {id:'sennichimae',name:'千日前線',      short:'千', color:'#e8639a'},
+  {id:'nagahori',  name:'長堀鶴見緑地線', short:'長', color:'#7ab648'},
   {id:'kanjo',     name:'大阪環状線',     short:'環', color:'#ca8a04'},
 ];
 
@@ -596,7 +599,6 @@ const S={
   answered:false, selected:[], sortOrder:[],
   session:{total:10,correct:0}, sidx:0,
 };
-let dragI=null;
 
 /* ═══════════════════════════════════════════
    RENDER
@@ -844,16 +846,24 @@ function qMissing(){
 function qSort(){
   const q=S.quiz,ans=S.answered;
   const ok=ans&&JSON.stringify(S.sortOrder.map(s=>s.n))===JSON.stringify(q.correctOrder);
-  const itemStyle=ans?(ok?'border-color:var(--green);background:rgba(52,211,153,0.08)':'border-color:var(--red);background:rgba(248,113,113,0.08)'):'';
+  const len=S.sortOrder.length;
   return `
   <div class="q-text">${q.question}</div>
-  <div class="q-sub">${q.sub}</div>
+  <div class="q-sub">${q.sub} ／ ▲▼ボタンで並べ替え</div>
   <div class="sort-area">
-    ${S.sortOrder.map((s,i)=>`<div class="sort-item" draggable="${!ans}" style="${itemStyle}"
-      ondragstart="dStart(${i})" ondragover="dOver(event,${i})" ondrop="dDrop(${i})" ondragleave="dLeave(event)">
-      <span class="dhandle">${ans?(ok?'✓':'✗'):'⠿'}</span>
-      <span class="snum">${i+1}</span>${s.n}
-    </div>`).join('')}
+    ${S.sortOrder.map((s,i)=>{
+      let itemStyle='';
+      if(ans) itemStyle=ok?'border-color:var(--green);background:rgba(52,211,153,0.08)':'border-color:var(--red);background:rgba(248,113,113,0.08)';
+      const resultMark=ans?(ok?'✓':'✗'):'';
+      return `<div class="sort-item" style="${itemStyle}">
+        <span class="snum">${ans?resultMark:(i+1)}</span>
+        <span class="sort-name">${s.n}</span>
+        ${!ans?`<div class="sort-move-btns">
+          <button class="sort-mv" onclick="sortMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="sort-mv" onclick="sortMove(${i},1)" ${i===len-1?'disabled':''}>▼</button>
+        </div>`:''}
+      </div>`;
+    }).join('')}
   </div>
   ${ans?`<div class="explain"><strong>正解順：</strong>${q.correctOrder.join(' → ')}</div>`:''}
   ${!ans?`<div class="q-actions"><button class="btn-p" onclick="commit()">この順番で回答</button></div>`:''}
@@ -1109,14 +1119,14 @@ function pushHist(ok){
   saveH(h);
 }
 
-/* Drag-n-drop for sort */
-function dStart(i){ dragI=i; }
-function dOver(e,i){ e.preventDefault(); document.querySelectorAll('.sort-item')[i]?.classList.add('over'); }
-function dLeave(e){ e.currentTarget.classList.remove('over'); }
-function dDrop(i){
-  if(dragI===null||dragI===i) return;
-  const arr=[...S.sortOrder],[m]=arr.splice(dragI,1);
-  arr.splice(i,0,m); S.sortOrder=arr; dragI=null;
+/* Sort move buttons */
+function sortMove(i, dir){
+  if(S.answered) return;
+  const arr=[...S.sortOrder];
+  const j=i+dir;
+  if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  S.sortOrder=arr;
   go('quiz');
 }
 
